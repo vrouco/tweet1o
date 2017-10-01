@@ -1,0 +1,6 @@
+> list.files()
+[1] "1-Opruebas.Rproj"               "catAll 2017-10-01 15.47.01.csv" "catNRT 2017-10-01 15.47.01.csv" "esAll 2017-10-01 15.47.01.csv" 
+[5] "esNRT 2017-10-01 15.47.01.csv"  "euAll 2017-10-01 15.47.01.csv"  "euNRT 2017-10-01 15.47.01.csv"  "filtering.R"                   
+[9] "get_tweet_info_noaut.R"      
+
+cross-sectional db para filtrar los datos y jugar un poco
