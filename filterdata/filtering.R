@@ -17,6 +17,7 @@ filterdfcat <- function(csv){
   }
   call$url[which(call$url=="character(0)")] <- NA
   call$text <- gsub("http\\w+ *", "", call$text) #remove http:...
+  call$text <- gsub("://t.co/[a-zA-Z0-9_]+ *", "", call$text)
   
   # at
   for (i in 1:length(splitText)){    
@@ -49,7 +50,7 @@ filterdfcat <- function(csv){
 
 
 
-filterdfnocat <- function(csv){   #la differenia es q hay que ortar la bdd para que no coja tweets en cataluña
+filterdfnocat <- function(csv){   #la differenia es q hay que cortar la bdd para que no coja tweets en cataluña
   
   call <- read.csv(csv,encoding = "latin1", sep=";")
   call$text <- as.character(call$text)
@@ -63,6 +64,7 @@ filterdfnocat <- function(csv){   #la differenia es q hay que ortar la bdd para 
   }
   call$url[which(call$url=="character(0)")] <- NA
   call$text <- gsub("http\\w+ *", "", call$text) #remove http:...
+  call$text <- gsub("://t.co/[a-zA-Z0-9_]+ *", "", call$text)
   
   # at
   for (i in 1:length(splitText)){    
