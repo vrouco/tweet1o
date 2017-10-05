@@ -6,6 +6,7 @@
 filterdfcat <- function(csv){
   
   call <- read.csv(csv,encoding = "latin1", sep=";")
+  call$or.text <- call$text
   call$text <- as.character(call$text)
   Encoding(call$text)<-"latin1"
   call$text <- gsub("\n"," ", call$text)
@@ -42,9 +43,12 @@ filterdfcat <- function(csv){
   call$is.RT <- ifelse(call$is.RT=="RT", TRUE, FALSE)
   call$text <- gsub("RT : ", "", call$text)
   call$text <- gsub("RT", "", call$text)
+  
+  require(qdap)
+  call$text <- qprep(call$text)
                     
-                    call <- call[!duplicated(call$text),]
-                    return(call)
+  call <- call[!duplicated(call$text),]
+  return(call)
 }
 
 
@@ -53,6 +57,7 @@ filterdfcat <- function(csv){
 filterdfnocat <- function(csv){   #la differenia es q hay que cortar la bdd para que no coja tweets en cataluña
   
   call <- read.csv(csv,encoding = "latin1", sep=";")
+  call$or.text <- call$text
   call$text <- as.character(call$text)
   Encoding(call$text)<-"latin1"
   call$text <- gsub("\n"," ", call$text)
@@ -91,6 +96,9 @@ filterdfnocat <- function(csv){   #la differenia es q hay que cortar la bdd para
   call$text <- gsub("RT", "", call$text)
   
   call <- call[1:800, ]   #este es el trimming, único para nocat
+  
+  require(qdap)
+  call$text <- qprep(call$text)
   
   call <- call[!duplicated(call$text),]
   return(call)
