@@ -2,64 +2,60 @@ import csv
 import difflib
 from unidecode import unidecode
 
-rows = []
+
+def read_csv(csv_file, delimiters):
+    dialect = csv.Sniffer().sniff(csv_file.read(), delimiters=delimiters)
+    csv_file.seek(0)
+    reader = csv.reader(csv_file, dialect=dialect)
+    return reader
+
 
 country = 'spain'
 
 with open('%s1-0_corr.csv' % country, 'r', encoding='latin_1') as csv_file:
-    reader = csv.reader(csv_file, delimiter=',')
-    for row in reader:
-        rows.append(row)
+    tweets_info = [row for row in read_csv(csv_file, ';,')]
 
-tweet_words = []
 
-for i, row in enumerate(rows):
+with open('hinojosa_3_lang.csv', 'r', encoding='utf-8') as csv_file:
+    reader = csv.reader(csv_file)
+    hin_dict = [row[0] for row in reader]
+
+'''
+for i, row in enumerate(tweets_info):
     sentence = row[2].replace('.', '')
     words = sentence.split()
     words = [unidecode(word.lower()) for word in words]
     tweet = [row[0], words]
     tweet_words.append(tweet)
+'''
 
-print(tweet_words)
+# print(tweet_words)
+# print(cat_dict)
 
-threshold = 0.85
+threshold = 0.86
 
-for tweet in tweet_words:
-    for n, tword in enumerate(tweet[1]):
-        for i, dword in enumerate(dictionary):
+for n, row in enumerate(tweets_info[1:]):
+    sentence = row[2].replace('.', '')
+    twords = sentence.split()
+    twords = [unidecode(word.lower()) for word in twords]
+    indian_tweet = []
+    for x, tword in enumerate(twords):
+        new_word = ''
+        for i, dword in enumerate(hin_dict):
             seq_match = difflib.SequenceMatcher(None, tword, dword)
             if seq_match.ratio() > threshold:
-                print(tword, dword)
+                new_word = dword
+                # print(tword, dword, [new_word])
+                break
+            else:
+                new_word = tword
+                # print(new_word)
+        indian_tweet.append(new_word)
+        # print(indian_tweet)
+    row[2] = ' '.join(indian_tweet)
+    # print(indian_tweet)
+    print(row)
 
-
-'''
-match_cnstrs = []
-threshold = 0.85
-for i, c in enumerate(f1_cnstrs):
-    for n, s in enumerate(f1_cnstrs):
-        if i != n:
-            seq_x = difflib.SequenceMatcher(None, c[0], s[0])
-            if seq_x.ratio() > threshold:
-                seq_y = difflib.SequenceMatcher(None, c[1], s[1])
-                if seq_y.ratio() > threshold:
-                    if sorted([i, n]) not in match_cnstrs:
-                        match_cnstrs.append(sorted([i, n]))
-                    print(c, s)
-            # It's possible to invert the constructs but not worth it
-
-print(len(match_cnstrs))
-
-remove_ind = [cnstr[1] for cnstr in match_cnstrs]
-print('INDEX')
-print(len(set(remove_ind)))
-f2_cnstrs = []
-for i, cnstr in enumerate(f1_cnstrs):
-    if i not in remove_ind:
-        f2_cnstrs.append(cnstr)
-
-print(len(f2_cnstrs))
-
-with open('sorted_dil.csv', 'w', newline='') as file:
+with open('%s1-0_indian.csv' % country, 'w', newline='', encoding='utf-8') as file:
     writer = csv.writer(file)
-    writer.writerows(sorted(f2_cnstrs))
-'''
+    writer.writerows(tweets_info)
