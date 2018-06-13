@@ -1,0 +1,209 @@
+---
+title: "explorando hitos a partir de las palabras de los tweets"
+author: "Wa1dO"
+date: "9/12/2017"
+output:
+  word_document: default
+  pdf_document: default
+---
+```{r españa cargar datos, echo=F, message=F, warning=F}
+require(devtools)
+require(lubridate)#for dates
+require(qdap)
+library(tidyverse)      # data manipulation & plotting
+library(stringr)        # text cleaning and regular expressions
+library(tidytext)       # provides additional text mining functions
+library(cldr)
+es <- read.csv("es_db_indian.csv", sep=",", stringsAsFactors = F)
+language <- detectLanguage(es$cleaned_text)
+rowstokeep <- which(language$detectedLanguage == "SPANISH")
+es <- es[which(language$detectedLanguage == "SPANISH"),]
+es$created <- strptime(es$created,format= "%Y-%m-%d %H:%M:%S")
+colnames(es)[4] <- "text"
+es$text <- as.character(es$text)
+x <- which(es$lang=="es")
+es <- es[x,]
+es2 <- es[order(es$text, -abs(as.numeric(es$retweetCount)) ), ] 
+y <- unique(es2$text)
+es2 <- es2[!duplicated(es2$text),]
+es <- es2
+rm(es2)
+text_tb <- tibble(tweet = seq_along(es$text),
+                  created = cut(es$created, breaks = "hour"),
+                  text = es$text)
+
+
+bigram <- text_tb %>%
+  unnest_tokens(bigram, text, token = "ngrams", n = 2)
+
+bigram$created<-as.Date(bigram$created)
+require(tm)
+
+bigram <- bigram[bigram$created>= "2017-10-01",]
+
+```
+
+
+```{r europa cargar datos, echo=F, message=F, warning=F}
+eu <- read.csv("eu_db_indian.csv", sep=",", stringsAsFactors = F)
+language <- detectLanguage(eu$cleaned_text)
+rowstokeep <- which(language$detectedLanguage == "ENGLISH")
+eu <- eu[which(language$detectedLanguage == "ENGLISH"),]
+eu$created <- strptime(eu$created,format= "%Y-%m-%d %H:%M:%S")
+colnames(eu)[4] <- "text"
+eu$text <- as.character(eu$text)
+x <- which(eu$lang=="en")
+eu <- eu[x,]
+eu2 <- eu[order(eu$text, -abs(as.numeric(eu$retweetCount)) ), ] 
+y <- unique(eu2$text)
+eu2 <- eu2[!duplicated(eu2$text),]
+eu <- eu2
+rm(eu2)
+text_tb.eu <- tibble(tweet = seq_along(eu$text),
+                  created = cut(eu$created, breaks = "hour"),
+                  text = eu$text)
+
+
+bigram.eu <- text_tb.eu %>%
+  unnest_tokens(bigram, text, token = "ngrams", n = 2)
+
+bigram.eu$created<-as.Date(bigram.eu$created)
+require(tm)
+
+bigram.eu <- bigram.eu[bigram.eu$created>= "2017-10-01",]
+```
+
+```{r catalunya cargar datos, echo=F, message=F, warning=F}
+cat <- read.csv("ca_db_indian.csv", sep=",", stringsAsFactors = F)
+language <- detectLanguage(cat$cleaned_text)
+rowstokeep <- which(language$detectedLanguage == "CATALAN" | language$detectedLanguage == "SPANISH")
+cat <- cat[which(language$detectedLanguage == "CATALAN" | language$detectedLanguage == "SPANISH"),]
+cat$created <- strptime(cat$created,format= "%Y-%m-%d %H:%M:%S")
+colnames(cat)[4] <- "text"
+cat$text <- as.character(cat$text)
+x <- which(cat$lang=="ca" | cat$lang=="es")
+cat <- cat[x,]
+cat2 <- cat[order(cat$text, -abs(as.numeric(cat$retweetCount)) ), ] 
+y <- unique(cat2$text)
+cat2 <- cat2[!duplicated(cat2$text),]
+cat <- cat2
+rm(cat2)
+text_tb.cat <- tibble(tweet = seq_along(cat$text),
+                  created = cut(cat$created, breaks = "hour"),
+                  text = cat$text)
+
+
+bigram.cat <- text_tb.cat %>%
+  unnest_tokens(bigram, text, token = "ngrams", n = 2)
+
+bigram.cat$created<-as.Date(bigram.cat$created)
+require(tm)
+
+bigram.cat <- bigram.cat[bigram.cat$created>= "2017-10-01",]
+```
+
+*ESPAÑA*
+
+
+```{r markov, echo=F, warning=F, message=F, results="asis", dpi=300, fig.width=7, fig.height=9}
+
+require(tm)
+library(cldr)
+library(igraph)
+library(ggraph)
+library(widyr)
+require(gridExtra)
+#length(levels(as.factor(bigram$created)))
+for(i in 1:length(levels(as.factor(bigram$created)))){
+bigrams_separated <- bigram %>%
+  filter(created >= "2017-10-01")%>%
+  separate(bigram, c("word1", "word2"), sep = " ")%>% 
+  filter(created==levels(as.factor(bigram$created))[i])%>%
+  filter(!word1 %in% stopwords(kind="spanish")) %>%
+  filter(!word2 %in% stopwords(kind="spanish")) %>%
+  count(word1, word2,created,sort = TRUE) %>%
+  filter(n > (median(n)+3*sd(n)))
+
+bigrams_graph <- bigrams_separated %>% 
+  graph_from_data_frame()
+
+bigrams_separated.eu <- bigram.eu %>%
+  filter(created >= "2017-10-01")%>%
+  separate(bigram, c("word1", "word2"), sep = " ")%>% 
+  filter(created==levels(as.factor(bigram$created))[i])%>%
+  filter(!word1 %in% stopwords(kind="english")) %>%
+  filter(!word2 %in% stopwords(kind="english")) %>%
+  count(word1, word2,created,sort = TRUE) %>%
+  filter(n > (median(n)+3*sd(n)))
+
+bigrams_graph.eu <- bigrams_separated.eu %>% 
+  graph_from_data_frame()
+
+bigrams_separated.cat <- bigram.cat %>%
+  filter(created >= "2017-10-01")%>%
+  separate(bigram, c("word1", "word2"), sep = " ")%>% 
+  filter(created==levels(as.factor(bigram$created))[i])%>%
+  filter(!word1 %in% stopwords(kind="catalan")) %>%
+  filter(!word2 %in% stopwords(kind="catalan")) %>%
+  filter(!word1 %in% stopwords(kind="spanish")) %>%
+  filter(!word2 %in% stopwords(kind="spanish")) %>%
+  count(word1, word2,created,sort = TRUE) %>%
+  filter(n > (median(n)+3*sd(n)))
+
+bigrams_graph.cat <- bigrams_separated.cat %>% 
+  graph_from_data_frame()
+
+
+
+es.graph <- ggraph(bigrams_graph, layout = "fr") +
+        theme_bw()+
+        ggtitle(levels(as.factor(bigram$created))[i])+
+        xlab(paste("Max = ", bigrams_separated$n[1], "; Threshold = ", 
+                   round(median(bigrams_separated$n)+3*sd(bigrams_separated$n)), digits=0)) +
+  geom_edge_link() +
+  geom_node_point() +
+  geom_node_text(aes(label = name), vjust = 1, hjust = 1)
+
+eu.graph <- ggraph(bigrams_graph.eu, layout = "fr") +
+        theme_bw()+
+        ggtitle(levels(as.factor(bigram.eu$created))[i])+
+        xlab(paste("Max = ", bigrams_separated$n[1], "; Threshold = ", 
+                   round(median(bigrams_separated.eu$n)+3*sd(bigrams_separated.eu$n)), digits=0)) +
+  geom_edge_link() +
+  geom_node_point() +
+  geom_node_text(aes(label = name), vjust = 1, hjust = 1)
+
+cat.graph <- ggraph(bigrams_graph.cat, layout = "fr") +
+        theme_bw()+
+        ggtitle(levels(as.factor(bigram.cat$created))[i])+
+        xlab(paste("Max = ", bigrams_separated$n[1], "; Threshold = ", 
+                   round(median(bigrams_separated.cat$n)+3*sd(bigrams_separated.cat$n)), digits=0)) +
+  geom_edge_link() +
+  geom_node_point() +
+  geom_node_text(aes(label = name), vjust = 1, hjust = 1)
+
+grid.arrange(es.graph, eu.graph,cat.graph, ncol=1)
+}
+
+```
+
+
+
+```{r unigrams, eval=T, message=F, echo=F, warning=F}
+unigram <- text_tb %>%
+  unnest_tokens(word, text)%>%
+  filter(!word %in% stopwords(kind="spanish"))
+
+unigram <- unigram[-which(is.na(unigram$created)),]
+
+unigram <- as.data.frame(unigram %>% group_by(created)  %>%
+                anti_join(stop_words) %>% 
+                count(word, created) %>%
+                filter(n >10) %>% 
+                filter(word!="hablar" & word!="estar" & word!="ser" & word!="haber"& word!="cataluña"& word!="catalunya"& word!="referéndum" &
+                         word!="rajoy" ))
+
+
+unigram[order(unigram$created, unigram$n),]
+```
+
