@@ -95,27 +95,33 @@ fit.anger <- arimax(ts_cat$anger, order=c(1,0,1), xtransf=step[[18]],
 fit.anticipation <- arimax(ts_cat$anticipation, order=c(1,0,1), xtransf=step[[251]], 
                            transfer=transfers <- rep(list(c(1,0)),length(step[[251]])), 
                            method='ML', optim.control = list(maxit = 1000))
+
 fit.disgust <- arimax(ts_cat$disgust, order=c(1,0,0), xtransf=step[[8]], 
                            transfer=transfers <- rep(list(c(1,0)),length(step[[8]])), 
                            method='ML', optim.control = list(maxit = 1000))
+
 fit.fear <- arimax(ts_cat$fear, order=c(1,0,0), xtransf=step[[2]], 
                       transfer=transfers <- rep(list(c(1,0)),length(step[[2]])), 
                       method='ML', optim.control = list(maxit = 1000))
+
 fit.joy <- arimax(ts_cat$joy, order=c(2,0,0), xtransf=step[[8]], 
                    transfer=transfers <- rep(list(c(1,0)),length(step[[8]])), 
                    method='ML', optim.control = list(maxit = 1000))
+
 fit.sadness <- arimax(ts_cat$sadness, order=c(1,0,1), xtransf=step[[5]], 
                   transfer=transfers <- rep(list(c(1,0)),length(step[[5]])), 
                   method='ML', optim.control = list(maxit = 1000))
+
 fit.surprise <- arimax(ts_cat$surprise, order=c(1,0,1), xtransf=step[[38]], 
                       transfer=transfers <- rep(list(c(1,0)),length(step[[38]])), 
                       method='ML', optim.control = list(maxit = 1000))
+
 fit.trust <- arimax(ts_cat$trust, order=c(1,0,1), xtransf=step[[19]], 
                        transfer=transfers <- rep(list(c(1,0)),length(step[[19]])), 
                        method='ML', optim.control = list(maxit = 1000))
-fit.valence <- arimax(ts_cat$valence, order=c(1,0,1), xtransf=step[[5]], 
-                    transfer=transfers <- rep(list(c(1,0)),length(step[[5]])), 
-                    method='ML', optim.control = list(maxit = 1000))
-fit.arousal <- arimax(ts_cat$arousal, order=c(1,0,1), xtransf=step[[5]], 
-                      transfer=transfers <- rep(list(c(1,0)),length(step[[5]])), 
-                      method='ML', optim.control = list(maxit = 1000))
+# fit.valence <- arimax(ts_cat$valence, order=c(1,0,1), xtransf=step[[5]], 
+#                     transfer=transfers <- rep(list(c(1,0)),length(step[[5]])), 
+#                     method='ML', optim.control = list(maxit = 1000))
+# fit.arousal <- arimax(ts_cat$arousal, order=c(1,0,1), xtransf=step[[5]], 
+#                       transfer=transfers <- rep(list(c(1,0)),length(step[[5]])), 
+#                       method='ML', optim.control = list(maxit = 1000))
