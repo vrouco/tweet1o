@@ -9,7 +9,7 @@ library('gridExtra')
 library('TSA')
 library('imputeTS')
 library('mgcv')
-library("tidyverse")
+
 
 here()
 # load data
@@ -36,17 +36,19 @@ for (i in 3:10) {
 
 # filter out seasonality
 ts_cat = data.frame(matrix(ncol = 8, nrow = nrow(cat)))
-colnames(ts_cat) = colnames(cat[1:8])
+colnames(ts_cat) = colnames(cat[3:10])
 cm_cat = list()
 for (i in 3:10) {
-  ts_cat[i-1] = ts(na.omit(cat[[i]]), frequency=12)
-  decomp = stl(ts_cat[[i-1]], s.window="periodic")
-  cm_cat[[i-1]] = decomp
-  ts_cat[[i-1]] <- seasadj(decomp)
+  ts_cat[i-2] = ts(na.omit(cat[[i]]), frequency=12)
+  decomp = stl(ts_cat[[i-2]], s.window="periodic")
+  cm_cat[[i-2]] = decomp
+  ts_cat[[i-2]] <- seasadj(decomp)
 }
-names(cm_cat)[2:9] = colnames(cat[,3:10])
-for (i in 2:length(cm_cat)) {
+
+names(cm_cat) = colnames(cat[,3:10])
+for (i in 1:length(cm_cat)) {
   plot(cm_cat[[i]], main=names(cm_cat[i]))
+  
 }
 
 # check stationarity
@@ -85,9 +87,11 @@ for (i in 1:length(shocks[,3:11])) {
 # models[[min]]$aic < fit1$aic # check if the model is better than no intervention at all
 
 # best models
-fit.anger <- TSA::arimax(ts_cat$anger, order=c(1,0,1), xtransf=step[[18]],
+#need to unrequire dplyr
+fit.anger <- arimax(ts_cat$anger, order=c(1,0,1), xtransf=step[[18]],
                     transfer=transfers <- rep(list(c(1,0)),length(step[[18]])), 
                     method='ML', optim.control = list(maxit = 1000))
+
 fit.anticipation <- arimax(ts_cat$anticipation, order=c(1,0,1), xtransf=step[[251]], 
                            transfer=transfers <- rep(list(c(1,0)),length(step[[251]])), 
                            method='ML', optim.control = list(maxit = 1000))
