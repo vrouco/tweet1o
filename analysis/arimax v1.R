@@ -11,8 +11,8 @@ library('imputeTS')
 library('mgcv')
 
 # load data
-cat = read.csv("cat nrc ts.csv") # catalonia
-shocks = read.csv2("shocks.csv", sep=','); shocks[1:3,3] = 0 # events
+cat = read.csv("spain nrc ts.csv") # catalonia
+shocks = read.csv2("shocks.csv", sep=','); shocks[1:3,3] = 0; shocks = shocks[1:393,] # events
 cat$index <- strptime(cat$index, format="%Y-%m-%d %H:%M:%S")
 cat <- subset(cat, cat$index < "2017-10-18 00:00:00")
 zscore <- function(x) (x-mean(x,na.rm=TRUE))/sd(x,na.rm = TRUE)
@@ -51,7 +51,7 @@ Acf(diff(ts_cat$anger, differences = 1), main='ACF for Differenced Series')
 Pacf(diff(ts_cat$anger, differences = 1), main='PACF for Differenced Series')
 
 # fit arima model
-fit1 = auto.arima(ts_cat$anger, stationary=TRUE, seasonal=FALSE, ic='aic', max.order=15)
+fit1 = auto.arima(ts_cat$trust, stationary=TRUE, seasonal=FALSE, ic='aic', max.order=15)
 fit1
 tsdisplay(residuals(fit1), lag.max=15, main='Seasonal Model Residuals') # check residuals
 
@@ -63,7 +63,7 @@ for (i in 1:length(shocks[,3:11])) {
 
 models <- list() # run models
 for (i in 1:length(step)) {
-  models[[i]] <- arimax(ts_cat$anger, order=c(1,0,1), xtransf=step[[i]], 
+  models[[i]] <- arimax(ts_cat$trust, order=c(1,0,1), xtransf=step[[i]], 
                         transfer=rep(list(c(1,0)),length(step[[i]])), method='ML',
                         optim.control = list(maxit = 1000))
 }
@@ -76,27 +76,19 @@ min <- which(aics == min(aics)) # find lowest AIC model
 models[[min]]$aic < fit1$aic # check if the model is better than no intervention at all
 
 # best models
-fit.anger <- arimax(ts_cat$anger, order=c(1,0,1), xtransf=step[[18]],
-                    transfer=transfers <- rep(list(c(1,0)),length(step[[18]])), 
-                    method='ML', optim.control = list(maxit = 1000))
-fit.anticipation <- arimax(ts_cat$anticipation, order=c(1,0,1), xtransf=step[[251]], 
-                           transfer=transfers <- rep(list(c(1,0)),length(step[[251]])), 
-                           method='ML', optim.control = list(maxit = 1000))
-fit.disgust <- arimax(ts_cat$disgust, order=c(1,0,0), xtransf=step[[8]],
-                           transfer=transfers <- rep(list(c(1,0)),length(step[[8]])), 
-                           method='ML', optim.control = list(maxit = 1000))
-fit.fear <- arimax(ts_cat$fear, order=c(1,0,0), xtransf=step[[2]], 
-                      transfer=transfers <- rep(list(c(1,0)),length(step[[2]])), 
-                      method='ML', optim.control = list(maxit = 1000))
+fit.anger <- auto.arima(ts_cat$anger, stationary=TRUE, seasonal=FALSE, ic='aic', max.order=15)
+fit.anticipation <- auto.arima(ts_cat$anticipation, stationary=TRUE, seasonal=FALSE, ic='aic', max.order=15)
+fit.disgust <- auto.arima(ts_cat$disgust, stationary=TRUE, seasonal=FALSE, ic='aic', max.order=15)
+fit.fear <- auto.arima(ts_cat$fear, stationary=TRUE, seasonal=FALSE, ic='aic', max.order=15)
 fit.joy <- arimax(ts_cat$joy, order=c(2,0,0), xtransf=step[[8]], 
-                   transfer=transfers <- rep(list(c(1,0)),length(step[[8]])), 
-                   method='ML', optim.control = list(maxit = 1000))
-fit.sadness <- arimax(ts_cat$sadness, order=c(1,0,1), xtransf=step[[5]], 
-                  transfer=transfers <- rep(list(c(1,0)),length(step[[5]])), 
+                  transfer=transfers <- rep(list(c(1,0)),length(step[[8]])), 
                   method='ML', optim.control = list(maxit = 1000))
-fit.surprise <- arimax(ts_cat$surprise, order=c(1,0,1), xtransf=step[[38]], 
-                      transfer=transfers <- rep(list(c(1,0)),length(step[[38]])), 
+fit.sadness <- arimax(ts_cat$sadness, order=c(1,0,1), xtransf=step[[5]], 
+                      transfer=transfers <- rep(list(c(1,0)),length(step[[5]])), 
                       method='ML', optim.control = list(maxit = 1000))
-fit.trust <- arimax(ts_cat$trust, order=c(1,0,1), xtransf=step[[19]], 
-                       transfer=transfers <- rep(list(c(1,0)),length(step[[19]])), 
+fit.surprise <- arimax(ts_cat$surprise, order=c(1,0,1), xtransf=step[[4]], 
+                       transfer=transfers <- rep(list(c(1,0)),length(step[[4]])), 
                        method='ML', optim.control = list(maxit = 1000))
+fit.trust <- arimax(ts_cat$trust, order=c(1,0,1), xtransf=step[[9]], 
+                    transfer=transfers <- rep(list(c(1,0)),length(step[[9]])), 
+                    method='ML', optim.control = list(maxit = 1000))
