@@ -65,23 +65,23 @@ step <- list() # all possible combinations
 for (i in 1:length(shocks[,3:11])) {
   step <- c(step, combn(shocks[,3:11],i,simplify=FALSE))
 }
+# THIS TAKES TOO LONG! MODEL FIND
+# models <- list() # run models
+# for (i in 1:length(step)) {
+#   models[[i]] <- arimax(ts_cat$anger, order=c(1,0,1), xtransf=step[[i]], 
+#                         transfer=rep(list(c(1,0)),length(step[[i]])), method='ML',
+#                         optim.control = list(maxit = 1000))
+# }
 
-models <- list() # run models
-for (i in 1:length(step)) {
-  models[[i]] <- arimax(ts_cat$anger, order=c(1,0,1), xtransf=step[[i]], 
-                        transfer=rep(list(c(1,0)),length(step[[i]])), method='ML',
-                        optim.control = list(maxit = 1000))
-}
-
-aics <- as.numeric() # get AICs
-for (i in 1:length(models)) {
-  aics[i] <- models[[i]]$aic
-}
-min <- which(aics == min(aics)) # find lowest AIC model
-models[[min]]$aic < fit1$aic # check if the model is better than no intervention at all
+# aics <- as.numeric() # get AICs
+# for (i in 1:length(models)) {
+#   aics[i] <- models[[i]]$aic
+# }
+# min <- which(aics == min(aics)) # find lowest AIC model
+# models[[min]]$aic < fit1$aic # check if the model is better than no intervention at all
 
 # best models
-fit.anger <- arimax(ts_cat$anger, order=c(1,0,1), xtransf=step[[18]],
+fit.anger <- TSA::arimax(ts_cat$anger, order=c(1,0,1), xtransf=step[[18]],
                     transfer=transfers <- rep(list(c(1,0)),length(step[[18]])), 
                     method='ML', optim.control = list(maxit = 1000))
 fit.anticipation <- arimax(ts_cat$anticipation, order=c(1,0,1), xtransf=step[[251]], 
