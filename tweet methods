@@ -1,0 +1,15 @@
+Analysis
+
+Preprocessing
+
+All time series were transformed to their respective Z scores. Outliers and missing values in each series were identified and interpolated using the tsclean function from the R package forecast. This function fits a robust trend using seasonal decomposition and identifies residuals exceeding the lower bound L=q0.1−2(q0.9−q0.1) or the upper bound U=q0.9+2(q0.9−q0.1) as outliers, where q0.1 and q0.9 are the 10th and 90th percentiles of the residuals respectively. Outliers and missing values are then interpolated on the robust trend before recomposing the series. Finally, the seasonal component (fluctuations related to hourly cycles) was subtracted from the resulting series with frequency fixed at 12 hours.
+
+Time series modeling
+
+For each time series, the best fitting autoregressive integrated moving average (ARIMA) model was found using the function auto.arima from the R package forecast. This model attempts to fit the data at current value t as a function of past values t-p, a combination of past error terms t-q and possibly subtraction of past values t-d when the series are not stationary; where p is the order of the autoregressive component (AR), q is the order of the moving average component (MA) and d is the order of the integrated component (I). The best ARIMA model found for each series was taken as a reference against to which compare intervention models.
+
+Intervention analysis
+
+In order to find whether meaningful events had a significant influence on the time series, ARIMA models with interventions (ARIMAX) were run for each series with the same AR, MA and I orders as in their corresponding reference models. An intervention is defined as an exogenous time series that takes value 1 from the moment an event occurs, being set to 0 erstwhile. The effect that each intervention has on each series was modeled via a transfer function with the form wB/1-δB where the numerator expresses a change in the series and the denominator the decay factor of such effect. Every combination of interventions was considered yielding 511 models to be compared for each series.
+
+Intervention models were compared using Akaike’s information criterion (AIC). For each time series, the ARIMAX model with the lowest AIC was selected as the best intervention model. This model was then compared to its reference ARIMA model using the same criterion. Only intervention models that had a lower AIC than their corresponding reference model and whose coefficient estimates were all greater than their respective standard error were considered. When no intervention model was better than its reference model and AR, MA and I orders implied more than 2 parameters, ARIMAX models with fewer order parameters were also explored.
