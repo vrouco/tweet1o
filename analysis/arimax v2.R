@@ -1,5 +1,6 @@
 # set working directory
-setwd("~/Desktop/polarity")
+
+library("here")
 
 # load required libraries
 library('ggplot2')
@@ -11,7 +12,7 @@ library('imputeTS')
 library('mgcv')
 
 
-
+here()
 # load data
 #cat = read.csv2("cat ts with val-ar from model.csv", sep=";") # catalonia
 cat = read.csv("cat nrc ts.csv", sep=",") # catalonia
