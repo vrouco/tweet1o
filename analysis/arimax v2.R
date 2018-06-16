@@ -23,7 +23,11 @@ setwd(here("data/milestones"))
 shocks = read.csv2("shocks.csv", sep=','); shocks[1:3,3] = 0 # events
 cat$index <- strptime(cat$index,format= "%Y-%m-%d %H:%M:%S")
 cat <- subset(cat, cat$index < "2017-10-18 00:00:00")
-as.numeric.factor <- function(x) {as.numeric(levels(x))[x]}
+
+zscore <- function(x) (x-mean(x,na.rm=TRUE))/sd(x,na.rm = TRUE)
+  for (i in 3:10) {
+  cat[,i] <- zscore(cat[,i])
+  }
 
 # filter down outliers
 for (i in 3:10) {
