@@ -1,42 +1,47 @@
 # set working directory
-setwd("~/Desktop/polarity")
+
+library("here")
 
 # load required libraries
-library('ggplot2')
 library('forecast')
 library('tseries')
 library('gridExtra')
 library('TSA')
 library('imputeTS')
 library('mgcv')
+library("tidyverse")
 
+here()
 # load data
-cat = read.csv("cat nrc ts.csv") # catalonia
+#cat = read.csv2("cat ts with val-ar from model.csv", sep=";") # catalonia
+
+setwd(here("data/participants/time series data"))
+
+cat = read.csv("cat nrc ts.csv", sep=",") # catalonia
+
+setwd(here("data/milestones"))
 shocks = read.csv2("shocks.csv", sep=','); shocks[1:3,3] = 0 # events
-cat$index <- strptime(cat$index, format="%Y-%m-%d %H:%M:%S")
+cat$index <- strptime(cat$index,format= "%Y-%m-%d %H:%M:%S")
 cat <- subset(cat, cat$index < "2017-10-18 00:00:00")
-zscore <- function(x) (x-mean(x,na.rm=TRUE))/sd(x,na.rm = TRUE)
-for (i in 3:10) {
-  cat[,i] <- zscore(cat[,i])
-}
+as.numeric.factor <- function(x) {as.numeric(levels(x))[x]}
 
 # filter down outliers
 for (i in 3:10) {
-  cat[[i]] = tsclean(cat[[i]])
+  cat[[i]] = forecast::tsclean(cat[[i]])
 }
 
 # filter out seasonality
 ts_cat = data.frame(matrix(ncol = 8, nrow = nrow(cat)))
-colnames(ts_cat) = colnames(cat[3:10])
+colnames(ts_cat) = colnames(cat[1:8])
 cm_cat = list()
 for (i in 3:10) {
-  ts_cat[i-2] = ts(na.omit(cat[[i]]), frequency=12)
-  decomp = stl(ts_cat[[i-2]], s.window="periodic")
-  cm_cat[[i-2]] = decomp
-  ts_cat[[i-2]] <- seasadj(decomp)
+  ts_cat[i-1] = ts(na.omit(cat[[i]]), frequency=12)
+  decomp = stl(ts_cat[[i-1]], s.window="periodic")
+  cm_cat[[i-1]] = decomp
+  ts_cat[[i-1]] <- seasadj(decomp)
 }
-names(cm_cat) = colnames(cat[,3:10])
-for (i in 1:length(cm_cat)) {
+names(cm_cat)[2:9] = colnames(cat[,3:10])
+for (i in 2:length(cm_cat)) {
   plot(cm_cat[[i]], main=names(cm_cat[i]))
 }
 
@@ -82,7 +87,7 @@ fit.anger <- arimax(ts_cat$anger, order=c(1,0,1), xtransf=step[[18]],
 fit.anticipation <- arimax(ts_cat$anticipation, order=c(1,0,1), xtransf=step[[251]], 
                            transfer=transfers <- rep(list(c(1,0)),length(step[[251]])), 
                            method='ML', optim.control = list(maxit = 1000))
-fit.disgust <- arimax(ts_cat$disgust, order=c(1,0,0), xtransf=step[[8]],
+fit.disgust <- arimax(ts_cat$disgust, order=c(1,0,0), xtransf=step[[8]], 
                            transfer=transfers <- rep(list(c(1,0)),length(step[[8]])), 
                            method='ML', optim.control = list(maxit = 1000))
 fit.fear <- arimax(ts_cat$fear, order=c(1,0,0), xtransf=step[[2]], 
@@ -100,3 +105,9 @@ fit.surprise <- arimax(ts_cat$surprise, order=c(1,0,1), xtransf=step[[38]],
 fit.trust <- arimax(ts_cat$trust, order=c(1,0,1), xtransf=step[[19]], 
                        transfer=transfers <- rep(list(c(1,0)),length(step[[19]])), 
                        method='ML', optim.control = list(maxit = 1000))
+fit.valence <- arimax(ts_cat$valence, order=c(1,0,1), xtransf=step[[5]], 
+                    transfer=transfers <- rep(list(c(1,0)),length(step[[5]])), 
+                    method='ML', optim.control = list(maxit = 1000))
+fit.arousal <- arimax(ts_cat$arousal, order=c(1,0,1), xtransf=step[[5]], 
+                      transfer=transfers <- rep(list(c(1,0)),length(step[[5]])), 
+                      method='ML', optim.control = list(maxit = 1000))
