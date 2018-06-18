@@ -1,4 +1,6 @@
 setwd("~/Dropbox/Victor/Cleaned_data_20-Oct")
+library("here")
+setwd(here("/data/participants"))
 
 es <- read.csv("es_db_indian.csv", sep=",", stringsAsFactors = F)
 cat <- read.csv("ca_db_indian.csv", sep=",", stringsAsFactors = F)
@@ -15,60 +17,64 @@ require(qdap)
 library(tidyverse)      # data manipulation & plotting
 library(stringr)        # text cleaning and regular expressions
 library(tidytext)       # provides additional text mining functions
-library(cldr)
+library(cld2)
 #demo(cldr)
 ###############
 
+url <- "http://cran.us.r-project.org/src/contrib/Archive/cldr/cldr_1.1.0.tar.gz"
+pkgFile<-"cldr_1.0.0.tar.gz"
+download.file(url = url, destfile = pkgFile)
+install.packages(pkgs=pkgFile, type="source", repos=NULL)
+unlink(pkgFile)
 
 ##################SELECT BASED ON LANGUAGE
-language <- detectLanguage(eu$cleaned_text)
-rowstokeep <- which(language$detectedLanguage == "ENGLISH")
-eu <- eu[which(language$detectedLanguage == "ENGLISH"),]
+language <- detect_language_multi(eu$text)
+rowstokeep <- which(language == "en")
+eu <- eu[which(language == "en"),]
 eu$created <- strptime(eu$created,format= "%Y-%m-%d %H:%M:%S")
-colnames(eu)[3] <- "text"
-eu$text <- as.character(eu$text)
 rm(eu2)
 
-language <- detectLanguage(cat$cleaned_text)
-rowstokeep <- which(language$detectedLanguage == "CATALAN")  ###WE COULD HAVE SELECTED CATALAN | SPANISH
-cat <- cat[which(language$detectedLanguage == "CATALAN"),]
+language <- detect_language(cat$cleaned_text)
+rowstokeep <- which(language == "ca")  ###WE COULD HAVE SELECTED CATALAN | SPANISH
+cat <- cat[which(language == "ca"),]
 cat$created <- strptime(cat$created,format= "%Y-%m-%d %H:%M:%S")
-colnames(cat)[4] <- "text"
-cat$text <- as.character(cat$text)
-which(duplicated(cat$text))
+
 #x <- which(cat$lang=="es")
 #cat <- cat[-x,]
-cat2 <- cat[order(cat$text, -abs(as.numeric(cat$retweetCount)) ), ] 
-y <- unique(cat2$text)
-cat2 <- cat2[!duplicated(cat2$text),]
-cat <- cat2
-rm(cat2)
+#WHATS THIS?
+# cat2 <- cat[order(cat$text, -abs(as.numeric(cat$retweetCount)) ), ] 
+# y <- unique(cat2$text)
+# cat2 <- cat2[!duplicated(cat2$text),]
+# cat <- cat2
+# rm(cat2)
 
-language <- detectLanguage(es$cleaned_text)
-rowstokeep <- which(language$detectedLanguage == "SPANISH")
-es <- es[which(language$detectedLanguage == "SPANISH"),]
+language <- detect_language(es$cleaned_text)
+rowstokeep <- which(language == "es")
+es <- es[which(language == "es"),]
 es$created <- strptime(es$created,format= "%Y-%m-%d %H:%M:%S")
-colnames(es)[4] <- "text"
-es$text <- as.character(es$text)
-x <- which(es$lang=="es")
-es <- es[x,]
-es2 <- es[order(es$text, -abs(as.numeric(es$retweetCount)) ), ] 
-y <- unique(es2$text)
-es2 <- es2[!duplicated(es2$text),]
-es <- es2
-rm(es2)
+
+# 
+# x <- which(es$lang=="es")
+# es <- es[x,]
+# es2 <- es[order(es$text, -abs(as.numeric(es$retweetCount)) ), ] 
+# y <- unique(es2$text)
+# es2 <- es2[!duplicated(es2$text),]
+# es <- es2
+# rm(es2)
 #############################################
 #############################################
 #     MAKE 1-gram TIBBLES   #
 #############################################
 #############################################
-require(xlsx)
-nrc <- read.xlsx2("modifiedNrc_cleaning empty rows V3.xlsx", 1,encoding = "UTF-8",header = F)
+
+setwd(here::here("/data/dictionary/NRC"))
+library(readxl)
+nrc <- read_excel("modifiedNrc_cleaning empty rows V3.xlsx")
 nrc <- nrc[,-1:-3]
 colnames(nrc) <- c("sentiment", "cat","es","eu" )
 
 lex.eu <- tibble(tweet = seq_along(eu$text),
-                  created = cut(eu$created, breaks = "hour"),
+                  created = cut(eu$created, breaks = "30 min"),
                   text = eu$text,
                   retweet = as.numeric(eu$retweetCount))%>%
                   unnest_tokens(word, text) %>%
