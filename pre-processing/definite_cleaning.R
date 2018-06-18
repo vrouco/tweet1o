@@ -67,26 +67,39 @@ es$created <- strptime(es$created,format= "%Y-%m-%d %H:%M:%S")
 #############################################
 #############################################
 
+to_lex <- function(language){
+  library("here")
+  setwd(here::here("/data/participants"))
+if(as.character(language) =="es"){
+  lexicon <- read.csv("es_db_indian.csv", sep=",", stringsAsFactors = F)
+}else{NA}
+  return(lexicon)}
+browser()
 setwd(here::here("/data/dictionary/NRC"))
 library(readxl)
 nrc <- read_excel("modifiedNrc_cleaning empty rows V3.xlsx")
 nrc <- nrc[,-1:-3]
 colnames(nrc) <- c("sentiment", "cat","es","eu" )
+if(any("cleaned_text" %in% colnames(lexicon))){
+  
+  lexicon$text <- lexicon$cleaned_text
+}
 
-lex.eu <- tibble(tweet = seq_along(eu$text),
-                  created = cut(eu$created, breaks = "30 min"),
-                  text = eu$text,
-                  retweet = as.numeric(eu$retweetCount))%>%
+lex.eu <- tibble(tweet = seq_along(lexicon$text),
+                  created = cut(lexicon$created, breaks = "30 min"),
+                  text = lexicon$text,
+                  retweet = as.numeric(lexicon$retweetCount))%>%
                   unnest_tokens(word, text) %>%
-                  inner_join(nrc, by=c("word" = "eu"))
+                  inner_join(nrc, by=c("word" = colnames(nrc)[lexicon]))
 
 lex.eu <- lex.eu[-which(is.na(lex.eu$created)),]
 lex.eu$created<- as.POSIXct(strptime(lex.eu$created,format= "%Y-%m-%d %H:%M:%S"))
-hist(lex.eu$created, breaks="days")
-lex.eu<- subset(lex.eu, lex.eu$created >= as.POSIXct('2017-10-01 06:00'))
-lex.cat<- subset(lex.cat, lex.cat$created < as.POSIXct('2017-10-22 00:00'))
-lex.eu$logretweet <- log1p(lex.eu$retweet)
-
+#hist(lex.eu$created, breaks="days")
+#lex.eu<- subset(lex.eu, lex.eu$created >= as.POSIXct('2017-10-01 06:00'))
+#lex.cat<- subset(lex.cat, lex.cat$created < as.POSIXct('2017-10-22 00:00'))
+#lex.eu$logretweet <- log1p(lex.eu$retweet)
+return(lex.eu)
+}
 
 lex.es <- tibble(tweet = seq_along(es$text),
                  created = cut(es$created, breaks = "hour"),
@@ -128,13 +141,10 @@ hitos$created<- as.POSIXct(strptime(hitos$created,format= "%Y-%m-%d %H:%M:%S"))
 hitos<- subset(hitos, hitos$created < as.POSIXct('2017-10-22 00:00'))
 #############################################
 #############################################
-#     EXPLORATORY   #
+#        #
 #############################################
 #############################################
-#preguntas a la bdd
-#1)Están las emociones bien definidas?
-#
-#en refine 
+
 
 
 write.csv(lex.cat, "data$lexicon cat.csv")
